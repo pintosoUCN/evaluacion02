@@ -1,77 +1,90 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-[Route("api/productos")]
 [ApiController]
-public class ProductosController : ControllerBase
+[Route("api/products")]
+public class ProductController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
 
-    public ProductosController(ApplicationDbContext context)
+    public ProductController(ApplicationDbContext context)
     {
         _context = context;
     }
 
-    // GET: api/productos
+    //get all products
+    // GET: api/products
     [HttpGet]
-    public async Task<IActionResult> ObtenerProductos()
+    public async Task<ActionResult<IEnumerable<Product>>> GetAllProducts()
     {
-        var productos = await _context.Product.ToListAsync();
-        return Ok(productos);
+        var products = await _context.Product.ToListAsync();
+        return Ok(products);
     }
 
-    // PUT: api/productos/1
+    //edit product
+    // PUT: api/products/5
     [HttpPut("{id}")]
-    public async Task<IActionResult> ActualizarProducto(int id, [FromBody] Product productoActualizado)
+    public async Task<IActionResult> EditProduct(int id, Product product)
     {
-        if (id != productoActualizado.Id)
-        {
-            return BadRequest();
-        }
-
-        _context.Entry(productoActualizado).State = EntityState.Modified;
-
         try
         {
-            await _context.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!ProductoExists(id))
+            var existingProduct = await _context.Product.FindAsync(id);
+
+            if (existingProduct == null)
             {
                 return NotFound();
-            }
-            else
-            {
-                throw;
-            }
-        }
+            }   
 
-        return NoContent();
+            existingProduct.Name = product.Name;
+            existingProduct.Description = product.Description;
+            existingProduct.Price = product.Price;
+            existingProduct.ImageUrl = product.ImageUrl;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(existingProduct);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, "Error al editar el producto");
+        }   
     }
 
-    // DELETE: api/productos/1
+    //delete prduct
+    // DELETE: api/products/5
     [HttpDelete("{id}")]
-    public async Task<IActionResult> EliminarProducto(int id)
+    public async Task<IActionResult> DeleteProduct(int id)
     {
-        var producto = await _context.Product.FindAsync(id);
+        var product = await _context.Product.FindAsync(id);
 
-        if (producto == null)
+        if (product == null)
         {
             return NotFound();
         }
 
-        _context.Product.Remove(producto);
+        _context.Product.Remove(product);
         await _context.SaveChangesAsync();
 
-        return NoContent();
+        return Ok(product);
     }
 
-    private bool ProductoExists(int id)
+    //create product
+    // POST: api/products
+    [HttpPost]
+    public async Task<ActionResult<Product>> CreateProduct(Product product)
     {
-        return _context.Product.Any(e => e.Id == id);
+        try{
+            _context.Product.Add(product);
+            await _context.SaveChangesAsync();
+            return Ok(product);
+        }catch(Exception ex){
+            return StatusCode(500, "Error al crear el producto");
+        }
     }
+
+
 }

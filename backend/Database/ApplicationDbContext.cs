@@ -51,8 +51,8 @@ public class ApplicationDbContext : DbContext
             new Product
             {
                 Id = 4,
-                ImageUrl = "https://picsum.photos/200/300",
-                Name = "Product 4",
+                ImageUrl = "http://www.libreriacervantes.com.sv/wp-content/uploads/2020/05/lapices-de-colores-largos-12-800x800.jpg",
+                Name = "Lápices 12 colores",
                 Price = 39990,
                 Description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
             }
